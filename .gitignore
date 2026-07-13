@@ -1,0 +1,4 @@
+.venv
+.env
+backend/alembic/script.py.mako
+backend/alembic/README
