@@ -20,6 +20,10 @@ class BaseConfig:
     # To get OAuth Provider and Credentials
     OAUTH_CLIENT_ID        = os.getenv("OAUTH_CLIENT_ID")
     OAUTH_CLIENT_SECRET    = os.getenv("OAUTH_CLIENT_SECRET")
+    
+    # Security Feat
+    CORS = []
+    CSP = "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'"
 
 class DevelopmentConfig(BaseConfig):
     DEBUG = True
@@ -30,23 +34,26 @@ class DevelopmentConfig(BaseConfig):
         "http://localhost:5000",
         "http://127.0.0.1:5000"
     ]
+    CSP = "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; connect-src 'self' http://localhost:8000"
 
 class StagingConfig(BaseConfig):
     DEBUG = False
-    SQLALCHEMY_DATABASE_URL = os.getenv("DATABASE_URL") 
+    SQLALCHEMY_DATABASE_URL = os.getenv("DATABASE_URL")
     CORS_ORIGINS = ["https://staging.myapp.com"]
+    CSP = "default-src 'self'; script-src 'self'; style-src 'self'; connect-src 'self' https://staging.myapp.com"
 
 class ProductionConfig(BaseConfig):
     DEBUG = False
     SQLALCHEMY_DATABASE_URL = os.getenv("DATABASE_URL")  # must exist in prod
     CORS_ORIGINS = ["https://myapp.com"]
+    CSP = "default-src 'self'; script-src 'self'; style-src 'self'; connect-src 'self' https://myapp.com"
 
 # ── Config selector ───────────────────────────────────────────────
 config = {
     "development": DevelopmentConfig,
     "staging": StagingConfig,
     "production": ProductionConfig,
-    "default": DevelopmentConfig,
+"default": DevelopmentConfig,
 }
 
 def get_config():
