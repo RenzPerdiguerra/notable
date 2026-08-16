@@ -2,7 +2,7 @@
 import os
 from dotenv import load_dotenv
 
-load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), "..", ".env"))
+load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), "..", "..", ".env"))
 
 class BaseConfig:
     """Shared config across environments."""
@@ -36,6 +36,11 @@ class DevelopmentConfig(BaseConfig):
     ]
     CSP = "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; connect-src 'self' http://localhost:8000"
 
+class TestingConfig(BaseConfig):
+    DEBUG = True
+    TESTING = True
+    SQLALCHEMY_DATABASE_URL = "sqlite:///:memory:"
+
 class StagingConfig(BaseConfig):
     DEBUG = False
     SQLALCHEMY_DATABASE_URL = os.getenv("DATABASE_URL")
@@ -51,6 +56,7 @@ class ProductionConfig(BaseConfig):
 # ── Config selector ───────────────────────────────────────────────
 config = {
     "development": DevelopmentConfig,
+    "testing": TestingConfig,
     "staging": StagingConfig,
     "production": ProductionConfig,
 "default": DevelopmentConfig,

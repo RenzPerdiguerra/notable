@@ -3,11 +3,12 @@ os.environ["FASTAPI_ENV"] = "testing"
 
 import pytest
 from fastapi.testclient import TestClient
-from sqlalchemy import create_engine, event
+from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
-from backend.app.db import Base, get_db, SessionLocal
+from backend.app.db import Base, get_db
+import backend.app.db as app_db
 from backend.main import app
 from backend.app.core.security import create_access_token
 from backend.app.schemas.user import UserCreate
@@ -29,13 +30,27 @@ TestingSessionLocal = sessionmaker(
     bind=TEST_ENGINE
 )
 
+# Ensure the application's db engine/session use the TEST_ENGINE so all
+# code paths (including imports that reference backend.app.db.engine)
+# operate against the same in-memory database used by tests.
+
+app_db.engine = TEST_ENGINE
+app_db.SessionLocal = TestingSessionLocal
+
 # ── Create All Tables Once ────────────────────────────────────────────────
 @pytest.fixture(scope="session", autouse=True)
 def setup_database():
     """Create schema once before all tests, drop after session."""
-    Base.metadata.create_all(bind=TEST_ENGINE)
+    # For PostgreSQL we use schema='management' in models. SQLite
+    # does not support schemas the same way, so attach an in-memory
+    # database with the name `management` so schema-qualified tables
+    # (e.g. management.users) can be created during tests.
+    connection = TEST_ENGINE.connect()
+    connection.execute(text("ATTACH DATABASE ':memory:' AS management"))
+    Base.metadata.create_all(bind=connection)
     yield
-    Base.metadata.drop_all(bind=TEST_ENGINE)
+    Base.metadata.drop_all(bind=connection)
+    connection.close()
 
 # ── DB Session Per Test With Rollback ─────────────────────────────────────
 @pytest.fixture(scope="function")
@@ -86,6 +101,12 @@ def test_user(db_session):
         password = "password123"
     )
     return create_user(db_session, user_in)
+
+
+@pytest.fixture
+def user(test_user):
+    """Alias for tests that expect a `user` fixture name."""
+    return test_user
 
 @pytest.fixture
 def auth_cookies(client, test_user):

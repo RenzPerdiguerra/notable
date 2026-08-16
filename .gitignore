@@ -1,5 +1,6 @@
 .venv
 .env
+*.pyc
 
 # backend
 backend/alembic/script.py.mako
