@@ -1,4 +1,3 @@
-import pytest
 from backend.app.services.ai_service import create_ai_provider, get_ai_provider, update_ai_provider, delete_ai_provider
 from backend.app.schemas.ai import AIProviderCreate, AIProviderUpdate
 
