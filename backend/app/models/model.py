@@ -26,7 +26,7 @@ class User(Base):
     hashed_password = Column(String(255), nullable=False)
     # Role is used to distinguish regular users from admins or other future roles.
     role = Column(String(50), nullable=False, index=True, server_default="user")
-    created_at = Column(DateTime(timezone=True), server_default=text("NOW()"))
+    created_at = Column(DateTime(timezone=True), server_default=text("CURRENT_TIMESTAMP"))
 
     # A user can have many notes and many AI conversations.
     notes = relationship("Note", back_populates="user", cascade="all, delete-orphan")
@@ -49,7 +49,7 @@ class Note(Base):
     title = Column(String(100), nullable=False)
     # Content is stored as JSON so the app can support rich note structures later.
     content = Column(JSON, nullable=False)
-    created_at = Column(DateTime(timezone=True), server_default=text("NOW()"))
+    created_at = Column(DateTime(timezone=True), server_default=text("CURRENT_TIMESTAMP"))
     updated_at = Column(DateTime(timezone=True), nullable=True)
 
     # Relationship back to the owning user.
@@ -88,15 +88,15 @@ class ChatSession(Base):
     # Who owns this chat conversation.
     user_id = Column(Integer, ForeignKey("management.users.id", ondelete="CASCADE"), nullable=False)
     # Optional note context if the user is chatting about a particular note.
-    note_id = Column(Integer, ForeignKey("management.notes.note_id", ondelete="SET NULL"), nullable=True)
+    note_id = Column(Integer, ForeignKey("management.notes.id", ondelete="SET NULL"), nullable=True)
     # Which AI backend is being used for this session.
-    ai_id = Column(Integer, ForeignKey("management.ai_providers.ai_id", ondelete="SET NULL"), nullable=True)
+    ai_id = Column(Integer, ForeignKey("management.ai_providers.id", ondelete="SET NULL"), nullable=True)
     # A friendly title for the conversation, such as "Summarize today's notes".
     title = Column(String(150), nullable=True)
     # Optional expiration time for temporary sessions.
     expires_at = Column(DateTime(timezone=True), nullable=True)
     is_active = Column(Boolean, nullable=False, default=True)
-    created_at = Column(DateTime(timezone=True), server_default=text("NOW()"))
+    created_at = Column(DateTime(timezone=True), server_default=text("CURRENT_TIMESTAMP"))
     updated_at = Column(DateTime(timezone=True), nullable=True)
 
     # Relationships to the user, note, and AI provider.
@@ -120,7 +120,7 @@ class ChatMessage(Base):
     role = Column(String(20), nullable=False)  # user / assistant / system
     # The actual text content of the message.
     content = Column(Text, nullable=False)
-    created_at = Column(DateTime(timezone=True), server_default=text("NOW()"))
+    created_at = Column(DateTime(timezone=True), server_default=text("CURRENT_TIMESTAMP"))
 
     # Back-reference to the parent session.
     session = relationship("ChatSession", back_populates="messages")
