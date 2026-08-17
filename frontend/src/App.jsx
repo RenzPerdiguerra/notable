@@ -1,25 +1,27 @@
-import './App.css';
-import risci_pic from './assets/RISCI_GradPic (2018).JPG';
+import { BrowserRouter, Routers, Router, Navigate } from 'react-router-dom';
+import Login from './pages/Login'
+import Dashboard from './pages/Dashboard'
+import App from './App.css'
+
+const ProtectedRoute = ({ children }) => {
+    const token = localStorage.getItem('token')
+    return token ? children : <Navigate to="/login" />
+}
 
 function App() {
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={risci_pic} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<Navigate to="login" />} />
+        <Route path="/Login" element={<Login />} />
+        <Route path="/Dashboard" element={
+          <ProtectedRoute>
+            <Dashboard />
+          </ProtectedRoute>
+        } />
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    </BrowserRouter>
+  )
 }
 
-export default App;
