@@ -3,7 +3,7 @@ os.environ["FASTAPI_ENV"] = "testing"
 
 import pytest
 from fastapi.testclient import TestClient
-from sqlalchemy import create_engine, text
+from sqlalchemy import create_engine, text, event
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
@@ -60,24 +60,31 @@ def db_session(setup_database):
     No data leaks between tests.
     """
     connection  = TEST_ENGINE.connect()
-    transaction = connection.begin()
+    transaction = connection.begin()          # outer, "real" transaction
     session     = TestingSessionLocal(bind=connection)
 
-    # Override get_db to use THIS exact session
-    # so client and db_session see the same data
+    # Start a SAVEPOINT to handle commit() in test modules
+    nested = connection.begin_nested()
+
+    @event.listens_for(session, "after_transaction_end")
+    def restart_savepoint(sess, trans):
+        nonlocal nested
+        if not nested.is_active:
+            # → immediately open a new one so future writes stay nested
+            nested = connection.begin_nested()
+
     def override_get_db():
         try:
             yield session
         finally:
-            pass   # session lifecycle managed by fixture
+            pass
 
     app.dependency_overrides[get_db] = override_get_db
 
     yield session
 
-    # Teardown — rollback everything the test did
     session.close()
-    transaction.rollback()
+    transaction.rollback()   # Teardown - rollback everything the test did
     connection.close()
     app.dependency_overrides.clear()
 
