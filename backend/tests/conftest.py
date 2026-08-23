@@ -59,19 +59,18 @@ def db_session(setup_database):
     Each test gets a clean DB state via transaction rollback.
     No data leaks between tests.
     """
+    print("\n--- NEW DB SESSION STARTED ---")
     connection  = TEST_ENGINE.connect()
     transaction = connection.begin()          # outer, "real" transaction
     session     = TestingSessionLocal(bind=connection)
+    original_commit = session.commit
 
     # Start a SAVEPOINT to handle commit() in test modules
-    nested = connection.begin_nested()
-
-    @event.listens_for(session, "after_transaction_end")
-    def restart_savepoint(sess, trans):
-        nonlocal nested
-        if not nested.is_active:
-            # → immediately open a new one so future writes stay nested
-            nested = connection.begin_nested()
+    def fake_savepoint():
+        print("--- FAKE COMMIT CALLED (flush only) ---")
+        session.flush()
+    
+    session.commit = fake_savepoint
 
     def override_get_db():
         try:
@@ -83,6 +82,8 @@ def db_session(setup_database):
 
     yield session
 
+    print("--- ROLLING BACK ---")
+    session.commit = original_commit
     session.close()
     transaction.rollback()   # Teardown - rollback everything the test did
     connection.close()
