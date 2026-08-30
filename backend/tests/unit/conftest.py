@@ -1,23 +1,22 @@
-import os
-os.environ["FASTAPI_ENV"] = "testing"
-
 import pytest
 from fastapi.testclient import TestClient
-from sqlalchemy import create_engine, text, event
+from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
 from backend.app.db import Base, get_db
 import backend.app.db as app_db
 from backend.main import app
-from backend.app.core.security import create_access_token
 from backend.app.schemas.user import UserCreate
 from backend.app.services.user_service import create_user
+from backend.app.schemas.chat import ChatSessionCreate
+from backend.app.services.chat_service import create_chat_session
 
 # ── Single In-Memory Engine ───────────────────────────────────────────────
 # StaticPool ensures ALL connections share the same in-memory database
 # check_same_thread=False allows SQLite to work across threads (FastAPI uses threads)
-TEST_ENGINE = create_engine(
+
+UNIT_TEST_ENGINE = create_engine(
     "sqlite:///:memory:",
     connect_args={"check_same_thread": False},
     poolclass=StaticPool,   # ← this is the fix for in-memory multi-connection issue
@@ -27,25 +26,25 @@ TEST_ENGINE = create_engine(
 TestingSessionLocal = sessionmaker(
     autocommit=False,
     autoflush=False,
-    bind=TEST_ENGINE
+    bind=UNIT_TEST_ENGINE
 )
 
 # Ensure the application's db engine/session use the TEST_ENGINE so all
 # code paths (including imports that reference backend.app.db.engine)
 # operate against the same in-memory database used by tests.
 
-app_db.engine = TEST_ENGINE
+app_db.engine = UNIT_TEST_ENGINE
 app_db.SessionLocal = TestingSessionLocal
 
 # ── Create All Tables Once ────────────────────────────────────────────────
 @pytest.fixture(scope="session", autouse=True)
-def setup_database():
+def setup_db():
     """Create schema once before all tests, drop after session."""
     # For PostgreSQL we use schema='management' in models. SQLite
     # does not support schemas the same way, so attach an in-memory
     # database with the name `management` so schema-qualified tables
     # (e.g. management.users) can be created during tests.
-    connection = TEST_ENGINE.connect()
+    connection = UNIT_TEST_ENGINE.connect()
     connection.execute(text("ATTACH DATABASE ':memory:' AS management"))
     Base.metadata.create_all(bind=connection)
     yield
@@ -54,13 +53,13 @@ def setup_database():
 
 # ── DB Session Per Test With Rollback ─────────────────────────────────────
 @pytest.fixture(scope="function")
-def db_session(setup_database):
+def db_session(setup_db):
     """
     Each test gets a clean DB state via transaction rollback.
     No data leaks between tests.
     """
     print("\n--- NEW DB SESSION STARTED ---")
-    connection  = TEST_ENGINE.connect()
+    connection  = UNIT_TEST_ENGINE.connect()
     transaction = connection.begin()          # outer, "real" transaction
     session     = TestingSessionLocal(bind=connection)
     original_commit = session.commit
@@ -96,7 +95,10 @@ def client(db_session):
     TestClient that shares the same DB session as db_session fixture.
     Override is already set in db_session fixture.
     """
-    with TestClient(app, raise_server_exceptions=True) as c:
+    with TestClient(app,
+                    raise_server_exceptions=True,
+                    follow_redirects=False
+                    ) as c:
         yield c
 
 # ── Auth Fixtures ─────────────────────────────────────────────────────────
@@ -109,7 +111,6 @@ def test_user(db_session):
         password = "password123"
     )
     return create_user(db_session, user_in)
-
 
 @pytest.fixture
 def user(test_user):
@@ -138,21 +139,11 @@ def auth_client(client, auth_cookies):
     """
     return client   # cookies already set on the client from auth_cookies fixture
 
-# ── OAuth Mock Fixture ────────────────────────────────────────────────────
+# ── Chat Fixture ────────────────────────────────────────────────────
 @pytest.fixture
-def mock_oauth(monkeypatch):
-    """
-    Mock OAuth provider so tests never hit Google/GitHub.
-    Replace with your actual OAuth service call.
-    """
-    async def fake_oauth_callback(code: str):
-        return {
-            "email"   : "oauthuser@gmail.com",
-            "username": "oauthuser",
-            "sub"     : "google-oauth2|123456"
-        }
-
-    monkeypatch.setattr(
-        "backend.app.services.oauth_service.get_oauth_user",
-        fake_oauth_callback
+def chat_session(db_session):
+    chat_session_in = ChatSessionCreate(
+        user_id = 1,
+        title = "MyTestChat",
     )
+    return create_chat_session(db_session, chat_session_in)
