@@ -1,6 +1,3 @@
-# Encapsulate Test Client dependency
-#
-
 def test_list_users_endpoint(client):
     response = client.get("/users/")
     assert response.status_code == 200

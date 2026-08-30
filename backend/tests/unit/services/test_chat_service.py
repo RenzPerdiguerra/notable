@@ -1,7 +1,5 @@
-import pytest
-from datetime import datetime, timedelta
 from backend.app.services.chat_service import (
-    create_chat_session, get_chat_session, list_chat_sessions,
+    create_chat_session, get_chat_session,
     update_chat_session, delete_chat_session,
     add_chat_message, list_chat_messages
 )

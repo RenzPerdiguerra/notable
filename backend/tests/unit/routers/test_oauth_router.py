@@ -1,12 +1,6 @@
 from urllib.parse import urlparse, parse_qs
 
-from fastapi.testclient import TestClient
-from backend.main import app
-
-client = TestClient(app, follow_redirects=False)
-
-
-def _get_state_from_login():
+def _get_state_from_login(client):
     """Helper: hits /oauth/google, returns the state value Google would echo back.
     TestClient keeps the oauth_state cookie in its jar automatically.
     """
@@ -16,7 +10,7 @@ def _get_state_from_login():
     return query["state"][0]
 
 
-def test_google_login_redirect():
+def test_google_login_redirect(client):
     response = client.get("/oauth/google")
     assert response.status_code == 307
     assert "accounts.google.com" in response.headers["location"]
@@ -27,29 +21,29 @@ def test_google_login_redirect():
     assert "oauth_state" in response.cookies
 
 
-def test_google_callback_missing_code():
-    state = _get_state_from_login()
+def test_google_callback_missing_code(client):
+    state = _get_state_from_login(client)
     response = client.get(f"/oauth/google/callback?state={state}")
     assert response.status_code == 400
     assert response.json()["detail"] == "OAuth code missing"
 
 
-def test_google_callback_missing_state():
+def test_google_callback_missing_state(client):
     # No prior /oauth/google call → no cookie → state check fails first
     response = client.cookies.clear() or client.get("/oauth/google/callback?code=fakecode")
     assert response.status_code == 400
     assert response.json()["detail"] == "Invalid OAuth state"
 
 
-def test_google_callback_state_mismatch():
-    _get_state_from_login()  # sets a valid cookie
+def test_google_callback_state_mismatch(client):
+    _get_state_from_login(client)  # sets a valid cookie
     response = client.get("/oauth/google/callback?code=fakecode&state=wrong-value")
     assert response.status_code == 400
     assert response.json()["detail"] == "Invalid OAuth state"
 
 
-def test_google_callback_provider_error():
-    state = _get_state_from_login()
+def test_google_callback_provider_error(client):
+    state = _get_state_from_login(client)
     response = client.get(
         f"/oauth/google/callback?error=access_denied&state={state}"
     )
@@ -57,8 +51,8 @@ def test_google_callback_provider_error():
     assert "access_denied" in response.json()["detail"]
 
 
-def test_google_callback_creates_user(db_session):
-    state = _get_state_from_login()
+def test_google_callback_creates_user(db_session, client):
+    state = _get_state_from_login(client)
     response = client.get(f"/oauth/google/callback?code=fakecode&state={state}")
     assert response.status_code == 200
     data = response.json()
