@@ -4,6 +4,7 @@ from backend.app.core.security import create_access_token
 from backend.app.db import get_db
 from backend.app.schemas.user import UserCreate, UserLogin, UserOut
 from backend.app.services.user_service import authenticate_user, create_user
+from backend.app.services.error_handler import EmailAlreadyExistsException, UserNameAlreadyExistsException
 
 router = APIRouter(prefix="/auth", tags=["Auth"])
 
@@ -11,9 +12,13 @@ router = APIRouter(prefix="/auth", tags=["Auth"])
 @router.post("/register", response_model=UserOut, status_code=status.HTTP_201_CREATED)
 def register(user_in: UserCreate, db: Session = Depends(get_db)):
     try:
-        return create_user(db=db, user_in=user_in)
+        return create_user(db, user_in)
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except EmailAlreadyExistsException as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
+    except UserNameAlreadyExistsException as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
 
 
 @router.post("/login")
