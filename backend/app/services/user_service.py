@@ -3,7 +3,7 @@ from typing import Optional
 from sqlalchemy.orm import Session
 from backend.app.models.model import User
 from backend.app.schemas.user import UserCreate, UserLogin, UserUpdate
-
+from backend.app.services.error_handler import EmailAlreadyExistsException, UserNameAlreadyExistsException
 
 def _hash_password(password: str) -> str:
     return hashlib.sha256(password.encode("utf-8")).hexdigest()
@@ -15,10 +15,10 @@ def _get_user_by_email(db: Session, email: str) -> Optional[User]:
 
 def create_user(db: Session, user_in: UserCreate) -> User:
     if _get_user_by_email(db, user_in.email):
-        raise ValueError("email is already registered")
+        raise EmailAlreadyExistsException("email is already registered")
 
     if db.query(User).filter(User.username == user_in.username.strip()).first():
-        raise ValueError("username is already taken")
+        raise UserNameAlreadyExistsException("username is already taken")
 
     user = User(
         email=user_in.email.lower(),
