@@ -92,7 +92,7 @@ def user(test_user):
     return test_user
 
 @pytest.fixture
-def auth_cookies(client):
+def auth_cookies(client, test_user):
     response = client.post("auth/login", json={
         "email" : "test@example.com",
         "username" : "testuser",
@@ -106,9 +106,22 @@ def auth_client(client, auth_cookies):
     return client
 
 @pytest.fixture
-def chat_sessions(db_session):
+def chat_session(db_session):
     chat_session_in = ChatSessionCreate(
         user_id = 1,
         title = "Integration Test Chat"
     )
     return create_chat_session(db_session, chat_session_in)
+
+@pytest.fixture
+def mock_oauth(monkeypatch):
+    async def fake_oauth_callback(code: str):
+        return {
+            "email": "oauthuser@gmail.com",
+            "username": "mickeymouse",
+            "sub": "google-oauth2|123"
+        }
+    monkeypatch.setattr(
+        "backend.app.routers.oauth_router",
+        fake_oauth_callback
+    )
