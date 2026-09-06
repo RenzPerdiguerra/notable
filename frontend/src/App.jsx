@@ -1,12 +1,22 @@
-import { BrowserRouter, Routers, Router, Navigate } from 'react-router-dom';
+import { useEffect } from 'react';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { authApi } from './api/api';
 import Login from './pages/Login'
 import Dashboard from './pages/Dashboard'
-import App from './App.css'
+import './App.css'
 
 const ProtectedRoute = ({ children }) => {
-    const token = localStorage.getItem('token')
-    return token ? children : <Navigate to="/login" />
-}
+    const [isAuth, setIsAuth] = useState(null);
+
+    useEffect(() => {
+      authApi.me()
+        .then(() => setIsAuth(true))
+        .catch(() =>setIsAuth(false));
+    }, []);
+    
+    if (isAuth === null) return <div>Loading...</div>;
+    return isAuth ? children : <Navigate to="/login" />;
+};
 
 function App() {
   return (
@@ -25,3 +35,4 @@ function App() {
   )
 }
 
+export default App
