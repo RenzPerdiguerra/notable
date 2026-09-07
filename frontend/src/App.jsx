@@ -1,9 +1,12 @@
-import { useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { authApi } from './api/api';
 import Login from './pages/Login'
+import Register from './pages/Register';
 import Dashboard from './pages/Dashboard'
+import NotFound from './pages/NotFound'
 import './App.css'
+
 
 const ProtectedRoute = ({ children }) => {
     const [isAuth, setIsAuth] = useState(null);
@@ -22,9 +25,10 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<Navigate to="login" />} />
-        <Route path="/Login" element={<Login />} />
-        <Route path="/Dashboard" element={
+        <Route path="/" element={<Navigate to="/login" />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+        <Route path="/dashboard" element={
           <ProtectedRoute>
             <Dashboard />
           </ProtectedRoute>
