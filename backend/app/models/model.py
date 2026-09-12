@@ -22,11 +22,16 @@ class User(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     email = Column(String(100), unique=True, nullable=False, index=True)
-    username = Column(String(50), unique=True, nullable=False, index=True)
-    hashed_password = Column(String(255), nullable=False)
+    username = Column(String(50), unique=True, nullable=True, index=True)
+    hashed_password = Column(String(255), nullable=True)
     # Role is used to distinguish regular users from admins or other future roles.
     role = Column(String(50), nullable=False, index=True, server_default="user")
     created_at = Column(DateTime(timezone=True), server_default=text("CURRENT_TIMESTAMP"))
+    
+    # Oauth fields
+    oauth_provider = Column(String(50), nullable=True)
+    oauth_id = Column(String(255), nullable=True)
+    avatar_url = Column(String(500), nullable=True)
 
     # A user can have many notes and many AI conversations.
     notes = relationship("Note", back_populates="user", cascade="all, delete-orphan")
