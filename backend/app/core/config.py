@@ -15,31 +15,20 @@ class BaseConfig:
     # Apply Http Only
     JWT_SECRET             = os.getenv("JWT_SECRET", "dev_secret")
     JWT_ALGORITHM          = os.getenv("JWT_ALGORITHM", "HS256")
-    JWT_ACCESS_TTL_MINUTES = int(os.getenv("JWT_ACCESS_TTL_MINUTES", 60))
+    JWT_ACCESS_TTL_MINUTES = int(os.getenv("JWT_ACCESS_TTL_MINUTES", "60"))
 
     # To get OAuth Provider and Credentials
     OAUTH_CLIENT_ID        = os.getenv("OAUTH_CLIENT_ID")
     OAUTH_CLIENT_SECRET    = os.getenv("OAUTH_CLIENT_SECRET")
     
-    # Security Feat
-    CORS = []
-    CSP = "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'"
-
 class DevelopmentConfig(BaseConfig):
     DEBUG = True
     SQLALCHEMY_DATABASE_URL = os.getenv("DATABASE_URL") 
     CORS_ORIGINS = [
-        "http://localhost:3000",
-        "http://127.0.0.1:3000",
-        "http://localhost:5000",
-        "http://127.0.0.1:5000"
+        "http://localhost:8000", "http://127.0.0.1:8000", "http://192.168.0.137:8000", 
+        "http://localhost:5173", "http://127.0.0.1:5173", "http://192.168.0.137:5173"
     ]
     CSP = "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; connect-src 'self' http://localhost:8000"
-
-class TestingConfig(BaseConfig):
-    DEBUG = True
-    TESTING = True
-    SQLALCHEMY_DATABASE_URL = "sqlite:///:memory:"
 
 class StagingConfig(BaseConfig):
     DEBUG = False
@@ -56,12 +45,10 @@ class ProductionConfig(BaseConfig):
 # ── Config selector ───────────────────────────────────────────────
 config = {
     "development": DevelopmentConfig,
-    "testing": TestingConfig,
     "staging": StagingConfig,
-    "production": ProductionConfig,
-"default": DevelopmentConfig,
+    "production": ProductionConfig
 }
 
 def get_config():
     env = os.getenv("FASTAPI_ENV", "development")
-    return config.get(env, config["default"])()
+    return config[env]()
