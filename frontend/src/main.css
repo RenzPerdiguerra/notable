@@ -4,11 +4,7 @@
   --primary-color: #2563eb;
   --font-family: 'Inter', sans-serif;
   --border-radius: 8px;
-}
-
-* {
-    padding: 0;
-}
+}   
 
 body {
   margin: 0;
