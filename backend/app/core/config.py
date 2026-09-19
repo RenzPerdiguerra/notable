@@ -18,8 +18,10 @@ class BaseConfig:
     JWT_ACCESS_TTL_MINUTES = int(os.getenv("JWT_ACCESS_TTL_MINUTES", "60"))
 
     # To get OAuth Provider and Credentials
-    OAUTH_CLIENT_ID        = os.getenv("OAUTH_CLIENT_ID")
-    OAUTH_CLIENT_SECRET    = os.getenv("OAUTH_CLIENT_SECRET")
+    OAUTH_GOOGLE_CLIENT_ID     : str = ""
+    OAUTH_GOOGLE_CLIENT_SECRET : str = ""
+    OAUTH_GITHUB_CLIENT_ID     : str = ""
+    OAUTH_GITHUB_CLIENT_SECRET : str = ""
     
 class DevelopmentConfig(BaseConfig):
     DEBUG = True
