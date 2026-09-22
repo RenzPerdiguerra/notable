@@ -7,7 +7,16 @@ export default defineConfig({
     react(),
     tailwindcss(),
   ],
-    server: {
-        host: true,
+  server: {
+    host: true,
+  },
+  test: {
+    globals: true,
+    environment: "jsdom",
+    setupFiles: ".src/tests/setup.js",
+    coverage: {
+      provider: "v8",
+      reporter: ["text", "html"],
     }
+  }
 })
