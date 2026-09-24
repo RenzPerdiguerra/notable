@@ -13,12 +13,12 @@ export default function Login() {
     e.preventDefault()
     setLoading(true)
 
+    const loginCredentials = user.includes("@")
+      ? { email: user, password }
+      : { username: user, password }
+
     try {
-      const res = await api.post("/auth/login", {
-        user,
-        password,
-        remember,
-      })
+      const res = await api.post("/auth/login", loginCredentials)
       console.log("Login success:", res.data);
       navigate("/dashboard");
     } catch (err) {

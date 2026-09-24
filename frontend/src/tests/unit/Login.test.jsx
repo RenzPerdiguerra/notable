@@ -61,6 +61,10 @@ describe("Login Page", () => {
         // Button should show loading state
         const loadingButton = await screen.findByRole("button", { name: "Signing in..." })
         expect(loadingButton).toBeDisabled()
+        expect(api.post).toHaveBeenCalledWith("/auth/login", {
+            username: "testuser",
+            password: "password123",
+        })
     })
     // Register modal prompt
     it("opens register modal when Register is clicked", async () => {
