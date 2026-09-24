@@ -1,4 +1,5 @@
 from urllib.parse import urlparse, parse_qs
+from unittest.mock import AsyncMock, patch
 
 def _get_state_from_login(client):
     """Helper: hits /oauth/google, returns the state value Google would echo back.
@@ -53,7 +54,19 @@ def test_google_callback_provider_error(client):
 
 def test_google_callback_creates_user(db_session, client):
     state = _get_state_from_login(client)
-    response = client.get(f"/oauth/google/callback?code=fakecode&state={state}")
+    with patch(
+        "backend.app.routers.oauth_router.exchange_code_for_token",
+        new=AsyncMock(return_value={"access_token": "fake-access-token"}),
+    ), patch(
+        "backend.app.routers.oauth_router.get_provider_user_info",
+        new=AsyncMock(return_value={
+            "email": "oauth-user@example.com",
+            "name": "OAuth User",
+            "sub": "google-user-123",
+        }),
+    ):
+        response = client.get(f"/oauth/google/callback?code=fakecode&state={state}")
+
     assert response.status_code == 200
     data = response.json()
     assert "access_token" in data
