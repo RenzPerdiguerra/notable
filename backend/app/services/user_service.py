@@ -8,12 +8,15 @@ from backend.app.services.error_handler import EmailAlreadyExistsException, User
 def _get_user_by_email(db: Session, email: str) -> Optional[User]:
     return db.query(User).filter(User.email == email.lower()).first()
 
+def _get_user_by_username(db: Session, username: str) -> Optional[User]:
+    return db.query(User).filter(User.username == username.strip()).first()
+
 
 def create_user(db: Session, user_in: UserCreate) -> User:
     if _get_user_by_email(db, user_in.email):
         raise EmailAlreadyExistsException("email is already registered")
-
-    if db.query(User).filter(User.username == user_in.username.strip()).first():
+    
+    if _get_user_by_username(db, user_in.username):
         raise UserNameAlreadyExistsException("username is already taken")
 
     user = User(
@@ -73,13 +76,16 @@ def delete_user(db: Session, user_id: int) -> bool:
 
 
 def authenticate_user(db: Session, user_in: UserLogin) -> Optional[User]:
-    user = _get_user_by_email(db, user_in.email)
-    if not user:
+    if user_in.email:
+        user = _get_user_by_email(db, user_in.email)
+    elif user_in.username:
+        user = _get_user_by_username(db, user_in.username)
+    else:
         return None
-
-    if not verify_password(user_in.password, user.hashed_password):
+    
+    if not user or not verify_password(user_in.password, user.hashed_password):
         return None
-
+    
     return user
 
 
