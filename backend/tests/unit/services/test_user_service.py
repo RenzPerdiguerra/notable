@@ -1,6 +1,7 @@
 import pytest
 from backend.app.services.user_service import create_user, update_user, delete_user, authenticate_user
 from backend.app.schemas.user import UserCreate, UserUpdate, UserLogin
+from backend.app.services.error_handler import EmailAlreadyExistsException, UserNameAlreadyExistsException
 
 def test_create_user_success(db_session):
     user_in = UserCreate(email="new@example.com", username="newuser", password="password123")
@@ -11,7 +12,13 @@ def test_create_user_success(db_session):
 def test_create_user_duplicate_email(db_session):
     user_in = UserCreate(email="dup@example.com", username="dupuser", password="password123")
     create_user(db_session, user_in)
-    with pytest.raises(ValueError):
+    with pytest.raises(EmailAlreadyExistsException):
+        create_user(db_session, user_in)
+
+def test_create_user_duplicate_username(db_session):
+    user_in = UserCreate(email="dup@example.com", username="dupuser", password="password123")
+    create_user(db_session, user_in)
+    with pytest.raises(UserNameAlreadyExistsException):
         create_user(db_session, user_in)
 
 def test_update_user_username(db_session):

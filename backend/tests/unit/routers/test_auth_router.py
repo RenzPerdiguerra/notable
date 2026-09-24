@@ -19,7 +19,8 @@ def test_register_user_duplicate_email(db_session, client):
         "username": "user2",
         "password": "password123"
     })
-    assert response.status_code == 400
+    assert response.status_code == 409
+    assert response.json() == {"detail": "email is already registered"}
 
 def test_login_success(db_session, client):
     client.post("/auth/register", json={
