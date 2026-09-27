@@ -5,12 +5,9 @@ from backend.app.models.model import Note
 from backend.app.schemas.note import NoteCreate, NoteUpdate
 
 
-def create_note(db: Session, note_in: NoteCreate) -> Note:
-    if note_in.user_id is None:
-        raise ValueError("user_id is required")
-
+def create_note(db: Session, note_in: NoteCreate, user_id: int) -> Note:
     note = Note(
-        user_id=note_in.user_id,
+        user_id=user_id,
         title=note_in.title.strip(),
         content=note_in.content,
     )
@@ -20,19 +17,21 @@ def create_note(db: Session, note_in: NoteCreate) -> Note:
     return note
 
 
-def get_note(db: Session, note_id: int) -> Optional[Note]:
-    return db.query(Note).filter(Note.id == note_id).first()
+def get_note(db: Session, note_id: int, user_id: int) -> Optional[Note]:
+    return db.query(Note).filter(Note.id == note_id, Note.user_id == user_id).first()
 
 
-def list_notes(db: Session, user_id: Optional[int] = None) -> list[Note]:
-    query = db.query(Note)
-    if user_id is not None:
-        query = query.filter(Note.user_id == user_id)
-    return query.order_by(Note.created_at.desc()).all()
+def list_notes(db: Session, user_id: int) -> list[Note]:
+    return (
+        db.query(Note)
+        .filter(Note.user_id == user_id)
+        .order_by(Note.created_at.desc())
+        .all()
+    )
 
 
-def update_note(db: Session, note_id: int, note_in: NoteUpdate) -> Optional[Note]:
-    note = get_note(db, note_id)
+def update_note(db: Session, note_id: int, note_in: NoteUpdate, user_id: int) -> Optional[Note]:
+    note = get_note(db, note_id, user_id)
     if not note:
         return None
 
@@ -48,8 +47,8 @@ def update_note(db: Session, note_id: int, note_in: NoteUpdate) -> Optional[Note
     return note
 
 
-def delete_note(db: Session, note_id: int) -> bool:
-    note = get_note(db, note_id)
+def delete_note(db: Session, note_id: int, user_id: int) -> bool:
+    note = get_note(db, note_id, user_id)
     if not note:
         return False
 
