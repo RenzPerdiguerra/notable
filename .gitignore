@@ -5,19 +5,24 @@
 # backend
 backend/alembic/script.py.mako
 backend/alembic/README
-
+backend/app/utilities/create_testuser_script.py
+backend/app/utilities/verify_password.py
 
 # frontend
-frontend/node_modules
-frontend/README.md
 /.pnp
 .pnp.js
+frontend/node_modules
+frontend/README.md
+frontend/dist
+frontend/src/components/ResponsiveWorkspace.css
+frontend/src/components/ResponsiveWorkspace.jsx
 
 # testing
-/coverage
+coverage
 
 # production
 /build
+DEPLOYMENT.md
 
 # misc
 .DS_Store
