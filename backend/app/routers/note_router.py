@@ -2,6 +2,8 @@ from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from backend.app.db import get_db
+from backend.app.models.model import User
+from backend.app.core.auth_dependencies import get_current_user
 from backend.app.schemas.note import NoteCreate, NoteOut, NoteUpdate
 from backend.app.services.note_service import create_note, delete_note, get_note, list_notes, update_note
 
@@ -9,7 +11,12 @@ router = APIRouter(prefix="/notes", tags=["Notes"])
 
 
 @router.post("/", response_model=NoteOut, status_code=status.HTTP_201_CREATED)
-def api_create_note(note_in: NoteCreate, db: Session = Depends(get_db)):
+def api_create_note(
+    note_in: NoteCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+    ):
+    note_in.user_id = current_user.id
     return create_note(db=db, note_in=note_in)
 
 
