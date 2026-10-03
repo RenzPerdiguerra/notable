@@ -17,18 +17,24 @@ class BaseConfig:
     JWT_ALGORITHM          = os.getenv("JWT_ALGORITHM", "HS256")
     JWT_ACCESS_TTL_MINUTES = int(os.getenv("JWT_ACCESS_TTL_MINUTES", "60"))
 
-    # To get OAuth Provider and Credentials
+    # Get OAuth Provider and Credentials
     OAUTH_GOOGLE_CLIENT_ID     : str = ""
     OAUTH_GOOGLE_CLIENT_SECRET : str = ""
     OAUTH_GITHUB_CLIENT_ID     : str = ""
     OAUTH_GITHUB_CLIENT_SECRET : str = ""
     
+    # Get AI key and mod
+    GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+    GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-3.5-flash-lite")
+    GROQ_API_KEY = os.getenv("GROQ_API_KEY")
+    GROQ_MODEL = os.getenv("GROQ_MODEL", "qwen/qwen3.8-27b")
+
 class DevelopmentConfig(BaseConfig):
     DEBUG = True
     SQLALCHEMY_DATABASE_URL = os.getenv("DATABASE_URL") 
     CORS_ORIGINS = [
-        "http://localhost:8000", "http://127.0.0.1:8000", "http://192.168.0.137:8000", 
-        "http://localhost:5173", "http://127.0.0.1:5173", "http://192.168.0.137:5173"
+        "http://localhost:8000", "http://127.0.0.1:8000", "http://192.168.0.137:8000", "http://192.168.1.12:8000",
+        "http://localhost:5173", "http://127.0.0.1:5173", "http://192.168.0.137:5173", "http://192.168.1.12:5173"
     ]
     CSP = "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; connect-src 'self' http://localhost:8000"
 
