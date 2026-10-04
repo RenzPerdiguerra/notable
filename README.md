@@ -21,7 +21,7 @@ React
 
 AI Technology
 Google Gemini
-Hugging Face
+Groq
 
 
 
