@@ -18,10 +18,10 @@ export default function Dashboard() {
     const [aiQuestion, setAiQuestion] = useState("")
     const [aiResponse, setAiResponse] = useState("")
     const [aiLoading, setAiLoading] = useState("")
-    const [aiProvider, setaiProvider] = useState("")
-    const navigate = useNavigate()
+    const [aiProvider, setaiProvider] = useState("groq")
     const queryClient = useQueryClient()
     const nextDraftId = useRef(1)
+    const navigate = useNavigate()
 
     // TODO: Fill with process for logout to remove user session (secure)
     // TODO: handleDropDown for adding user profile, settings, log/monitoring
@@ -258,7 +258,7 @@ export default function Dashboard() {
                     response = await aiApi.enhance(selectedNote.id, aiProvider)
                     break
                 case "ask":
-                    response = await aiApi.ask(aiQuestion, aiProvider)
+                    response = await aiApi.ask(selectedNote.id, aiQuestion, aiProvider)
                     break
             }
             setAiResponse(response.data)
@@ -493,8 +493,8 @@ export default function Dashboard() {
                             onChange={(e) => setaiProvider(e.target.value)}
                             className="w-full text-xs border border-gray-200 rounder-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500"
                         >
+                            <option value="groq">Groq</option>
                             <option value="gemini">Gemini</option>
-                            <option value="huggingface">Hugging Face</option>
                         </select>
                     </div>
                     {/*AI Action Buttons*/}
