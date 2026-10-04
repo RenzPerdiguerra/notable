@@ -1,5 +1,17 @@
-from typing import Optional
+from typing import Literal, Optional
 from pydantic import BaseModel, ConfigDict
+
+
+class AINoteActionRequest(BaseModel):
+    note_id: int
+    provider: Literal["gemini", "groq"] = "gemini"
+    question: Optional[str] = None
+
+
+class AIActionResponse(BaseModel):
+    result: str
+    provider: Literal["gemini", "groq"]
+    action: Literal["summarize", "questions", "enhance", "ask"]
 
 
 class AIProviderCreate(BaseModel):
