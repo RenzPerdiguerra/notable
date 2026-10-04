@@ -63,18 +63,18 @@ class Note(Base):
     chat_sessions = relationship("ChatSession", back_populates="note", cascade="all, delete-orphan")
 
 
-# This table stores which AI backend the app can use, such as Gemini or
-# Hugging Face. The app can later switch between them per chat session.
+# This table stores which AI backend the app can use, such as Gemini or Groq.
+# The app can later switch between them per chat session.
 class AI(Base):
     __tablename__ = "ai_providers"
     __table_args__ = {"schema": "management"}
 
     id = Column(Integer, primary_key=True, index=True)
-    # Friendly display name for the provider, such as "Gemini" or "Hugging Face".
+    # Friendly display name for the provider, such as "Gemini" or "Groq".
     name = Column(String(100), nullable=False, unique=True)
     # The provider family used by the app.
-    provider_type = Column(String(50), nullable=False)  # gemini / huggingface
-    # Optional model identifier, such as a Gemini model or HF model name.
+    provider_type = Column(String(50), nullable=False)  # gemini / groq
+    # Optional model identifier, such as a Gemini or Groq model name.
     model_name = Column(String(100), nullable=True)
     is_active = Column(Boolean, nullable=False, default=True)
 
