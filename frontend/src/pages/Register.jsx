@@ -53,7 +53,7 @@ const Register = () => {
     }
 
     const handleOAuth = (provider) => {
-        window.location.href = `${import.meta.env.VITE_API_URL || "http://127.0.0.1:8000"}/auth/${[provider]}`
+        window.location.href = new URL(provider, import.meta.env.VITE_API_URL || 'http://localhost:8000').href
     }
 
     return (
@@ -85,7 +85,7 @@ const Register = () => {
                 {/* OAuth Options */}
                 <div className="flex flex-col gap-3 mb-6">
                     <button
-                        onClick={() => handleOAuth("google")}
+                        onClick={() => handleOAuth("/oauth/google")}
                         className="flex items-center justify-center gap-3 w-full border border-gray-200 rounded-lg py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
                     >
                         <svg className="w-5 h-5" viewBox="0 0 24 24">
@@ -97,7 +97,7 @@ const Register = () => {
                         Continue with Google
                     </button>
                     <button
-                        onClick={() => handleOAuth("github")}
+                        onClick={() => handleOAuth("/oauth/github")}
                         className="flex items-center justify-center gap-3 w-full border border-gray-200 rounded-lg py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
                     >
                         {/* GitHub SVG Icon */}

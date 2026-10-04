@@ -18,11 +18,13 @@ class BaseConfig:
     JWT_ACCESS_TTL_MINUTES = int(os.getenv("JWT_ACCESS_TTL_MINUTES", "60"))
 
     # Get OAuth Provider and Credentials
-    OAUTH_GOOGLE_CLIENT_ID     : str = ""
-    OAUTH_GOOGLE_CLIENT_SECRET : str = ""
-    OAUTH_GITHUB_CLIENT_ID     : str = ""
-    OAUTH_GITHUB_CLIENT_SECRET : str = ""
-    
+    OAUTH_GOOGLE_CLIENT_ID     : str = os.getenv("OAUTH_GOOGLE_CLIENT_ID")
+    OAUTH_GOOGLE_CLIENT_SECRET : str = os.getenv("OAUTH_GOOGLE_CLIENT_SECRET")
+    OAUTH_GITHUB_CLIENT_ID     : str = os.getenv("OAUTH_GITHUB_CLIENT_ID")
+    OAUTH_GITHUB_CLIENT_SECRET : str = os.getenv("OAUTH_GITHUB_CLIENT_SECRET")
+    FRONTEND_URL = os.getenv("FRONTEND_URL")
+    COOKIE_SECURE = os.getenv("COOKIE_SECURE")
+        
     # Get AI key and mod
     GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
     GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-3.5-flash-lite")

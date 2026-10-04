@@ -30,7 +30,7 @@ export default function Login() {
 
   const handleOAuth = (provider) => {
     // Redirect to FastAPI OAuth endpoint
-    window.location.href = import.meta.env.VITE_API_URL + provider;
+    window.location.href = (import.meta.env.VITE_API_URL || `${window.location.protocol}//${window.location.hostname}:8000`) + provider;
   };
 
   return (
@@ -109,13 +109,13 @@ export default function Login() {
         {/* OAuth Buttons */}
         <div className="mt-6 space-y-2">
           <button
-            onClick={() => handleOAuth("/google")}
+            onClick={() => handleOAuth("/oauth/google")}
             className="w-full bg-red-500 text-white py-2 px-4 rounded-md font-semibold hover:bg-red-600 transition"
           >
             Continue with Google
           </button>
           <button
-            onClick={() => handleOAuth("/github")}
+            onClick={() => handleOAuth("/oauth/github")}
             className="w-full bg-gray-800 text-white py-2 px-4 rounded-md font-semibold hover:bg-gray-900 transition"
           >
             Continue with GitHub
