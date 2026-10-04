@@ -1,23 +1,23 @@
-import axios from 'axios';
+import axios from 'axios'
 
 const apiBaseUrl = import.meta.env.VITE_API_URL
-  || `${window.location.protocol}//${window.location.hostname}:8000`;
+  || `${window.location.protocol}//${window.location.hostname}:8000`
 
 const api = axios.create({
   baseURL: apiBaseUrl,
   headers: { 'Content-Type': 'application/json' },
   withCredentials: true,
-});
+})
 
 api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      window.location.href = '/login';
+      window.location.href = '/login'
     }
-    return Promise.reject(error);
+    return Promise.reject(error)
   }
-);
+)
 
 export const authApi = {
   register: (data) => api.post("/auth/register", data),
@@ -28,7 +28,7 @@ export const authApi = {
     ),
   logout: () => api.post('/api/auth/logout'),
   me: () => api.get('/users/me')
-};
+}
 
 export const userApi = {
   create: (data) => api.post('/users/create/', data),
@@ -45,31 +45,18 @@ export const notesApi = {
   update: (id, data) => api.put(`/notes/${id}`, data),
   delete: (id) => api.delete(`/notes/${id}`),
   query: (query) => api.get(`/notes/search?q=${query}`),
-};
+}
 
-  /* Add variability for provider */
 export const aiApi = {
-  // Summarize the note/s provided in the inquiry
+  // All actions operate on a note the authenticated user owns.
   summarize: (noteId, provider) =>
-    api.post('/ai/summarize', { note_id: noteId, provider}),
-  // Allow user to ask a question 
-  ask: (question, provider) =>
-    api.post('/ai/ask', { question, provider}),
-  // Enhance the note/s provided in the inquiry
+    api.post('/ai/summarize', { note_id: noteId, provider }),
+  ask: (noteId, question, provider) =>
+    api.post('/ai/ask', { note_id: noteId, question, provider }),
   enhance: (noteId, provider) =>
-    api.post('/ai/enhance', { note_id: noteId, provider}),
-  // Generate questions from specific note
-  generateQuestions:  (noteId, provider) =>
-    api.post('/ai/questions', { note_id: noteId, provider}),
-  
-  /*
-  // Get saved responses from AI
-  getSaved: (noteId) =>
-    api.get(`ai/saved/${noteId}`),
-  // Delete saved response from AI
-  deleteSaved: (noteId) =>
-    api.delete(`ai/saved/${noteId}`),
-  */
+    api.post('/ai/enhance', { note_id: noteId, provider }),
+  generateQuestions: (noteId, provider) =>
+    api.post('/ai/questions', { note_id: noteId, provider }),
 }
 
 export const chatApi = {
