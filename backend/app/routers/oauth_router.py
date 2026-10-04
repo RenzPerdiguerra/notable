@@ -63,6 +63,7 @@ def validate_provider(provider: str):
             status_code=400,
             detail=f"Unsupported provider '{provider}'. Supported: {sorted(SUPPORTED_PROVIDERS)}"
         )
+    return provider
 
 
 async def exchange_code_for_token(
@@ -243,14 +244,18 @@ async def oauth_callback(
     # ── 7. Issue JWT ──────────────────────────────────────────────────────
     jwt_token = create_access_token(subject=user.id)
 
-    response = JSONResponse({
-        "access_token": jwt_token,
-        "token_type"  : "bearer",
-        "user"        : {
-            "id"      : user.id,
-            "email"   : user.email,
-            "username": user.username,
-        },
-    })
+    response = RedirectResponse(
+        url=f"{config.FRONTEND_URL.rstrip("/")}/dashboard",
+        status_code=303,
+    )
+    response.set_cookie(
+        key="access_token",
+        value=jwt_token,
+        httponly=True,
+        secure=config.COOKIE_SECURE, # True in HTTPS production
+        samesite="lax",
+        max_age=60 * 60,
+        path="/",
+        )
     response.delete_cookie("oauth_state")
     return response
