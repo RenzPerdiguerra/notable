@@ -4,6 +4,8 @@ from unittest.mock import AsyncMock, patch
 from fastapi import HTTPException
 from fastapi.testclient import TestClient
 from backend.main import app
+from backend.app.core.config import get_config
+from backend.app.models.model import User
 
 # ── Fake provider responses ───────────────────────────────────────────────
 FAKE_TOKEN_RESPONSE = {
@@ -41,6 +43,14 @@ GH_EMAIL_TARGET  = "backend.app.routers.oauth_router.get_github_primary_email"
 # Every test marked with @pytest.mark.parametrize("provider", PROVIDERS)
 # runs once for Google and once for GitHub automatically.
 PROVIDERS = ["google", "github"]
+
+
+def _assert_callback_redirect(response):
+    assert response.status_code == 303
+    assert response.headers["location"] == (
+        f"{get_config().FRONTEND_URL.rstrip('/')}/dashboard"
+    )
+    assert response.cookies.get("access_token")
 
 
 # ── Login redirect tests ──────────────────────────────────────────────────
@@ -189,16 +199,14 @@ class TestOAuthCallbackSuccess:
 
     @pytest.mark.parametrize("provider", PROVIDERS)
     def test_returns_token_and_user(self, provider, db_session):
-        """Happy path — valid callback returns JWT and user info."""
+        """Happy path redirects with a JWT cookie and creates the user."""
         response = self._run_callback(provider, db_session)
-        assert response.status_code == 200
-        data = response.json()
-        assert "access_token"       in data
-        assert data["token_type"]   == "bearer"
-        assert "user"               in data
-        assert "email"              in data["user"]
-        assert "id"                 in data["user"]
-        assert "username"           in data["user"]
+        _assert_callback_redirect(response)
+
+        expected_email = FAKE_USER_INFO[provider]["email"]
+        user = db_session.query(User).filter(User.email == expected_email).one()
+        assert user.id is not None
+        assert user.username == "mickeymouse"
 
     @pytest.mark.parametrize("provider", PROVIDERS)
     def test_state_cookie_cleared_after_success(self, provider, db_session):
@@ -211,10 +219,17 @@ class TestOAuthCallbackSuccess:
     def test_existing_user_not_duplicated(self, provider, db_session):
         """Calling callback twice with same email reuses existing user."""
         r1 = self._run_callback(provider, db_session)
+        _assert_callback_redirect(r1)
+        first_user = db_session.query(User).filter(
+            User.email == FAKE_USER_INFO[provider]["email"]
+        ).one()
+
         r2 = self._run_callback(provider, db_session)
-        assert r1.status_code == 200
-        assert r2.status_code == 200
-        assert r1.json()["user"]["id"] == r2.json()["user"]["id"]
+        _assert_callback_redirect(r2)
+        reused_user = db_session.query(User).filter(
+            User.email == FAKE_USER_INFO[provider]["email"]
+        ).one()
+        assert reused_user.id == first_user.id
 
     @pytest.mark.parametrize("provider", PROVIDERS)
     def test_token_exchange_failure_returns_error(self, provider, db_session):
@@ -254,17 +269,26 @@ class TestGitHubSpecific:
         state         = "github_email_test"
         no_email_info = {**FAKE_USER_INFO["github"], "email": None}
 
-        with patch(EXCHANGE_TARGET, new=AsyncMock(return_value=FAKE_TOKEN_RESPONSE)), \
-             patch(USERINFO_TARGET, new=AsyncMock(return_value=no_email_info)), \
-             patch(GH_EMAIL_TARGET, new=AsyncMock(return_value="oauthuser@github.com")):
+        with (
+            patch(EXCHANGE_TARGET, new=AsyncMock(return_value=FAKE_TOKEN_RESPONSE)),
+            patch(USERINFO_TARGET, new=AsyncMock(return_value=no_email_info)),
+            patch(
+                GH_EMAIL_TARGET,
+                new=AsyncMock(return_value="oauthuser@github.com"),
+            ) as fetch_github_email,
+        ):
             with TestClient(app, follow_redirects=False) as c:
                 c.cookies.set("oauth_state", state)
                 response = c.get(
                     f"/oauth/github/callback?code=valid_code&state={state}"
                 )
 
-        assert response.status_code == 200
-        assert response.json()["user"]["email"] == "oauthuser@github.com"
+        _assert_callback_redirect(response)
+        fetch_github_email.assert_awaited_once_with("fake_access_token")
+        user = db_session.query(User).filter(
+            User.email == "oauthuser@github.com"
+        ).one()
+        assert user.email == "oauthuser@github.com"
 
     def test_github_no_email_anywhere_returns_400(self, db_session):
         """Negative — GitHub returns no email at all → 400."""
