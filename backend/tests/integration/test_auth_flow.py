@@ -52,11 +52,12 @@ def test_register_duplicate_email_returns_409(client, test_user):
     
 def test_username_duplicate_username_returns_409(client, test_user):
     register = client.post("/auth/register", json={
-        "email": "test@example.com",
+        "email": "another@example.com",
         "username": "testuser",
-        "password": "password123"
+        "password": "anotherpassword"
     })
     assert register.status_code == 409
+    assert register.json() == {"detail": "username is already taken"}
     
 def test_protected_route_without_cookie_returns_401(client):
     response = client.get("/users/me")
