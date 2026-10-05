@@ -22,7 +22,7 @@ class UserCreate(BaseModel):
     def validate_password(cls, value: str) -> str:
         value = value.strip()
         if len(value) < 8:
-            raise ValueError("password must be at least 8 characters")
+            raise ValueError("password must be at least 6 characters")
         return value
 
 
@@ -49,7 +49,7 @@ class UserUpdate(BaseModel):
             return value
         value = value.strip()
         if len(value) < 8:
-            raise ValueError("password must be at least 8 characters")
+            raise ValueError("password must be at least 6 characters")
         return value
 
 

@@ -13,6 +13,6 @@ class UserNameAlreadyExistsException(Exception):
 async def email_already_exists(request: Request, exc: EmailAlreadyExistsException):
     return JSONResponse(status_code=409, content={"detail": str(exc)})
 
-@app.exception_handler(EmailAlreadyExistsException)
+@app.exception_handler(UserNameAlreadyExistsException)
 async def username_already_exists(request: Request, exc: UserNameAlreadyExistsException):
     return JSONResponse(status_code=409, content={"detail": str(exc)})
