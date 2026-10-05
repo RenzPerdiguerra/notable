@@ -1,5 +1,6 @@
 from urllib.parse import urlparse, parse_qs
 from unittest.mock import AsyncMock, patch
+from backend.app.core.config import get_config
 
 def _get_state_from_login(client):
     """Helper: hits /oauth/google, returns the state value Google would echo back.
@@ -67,8 +68,8 @@ def test_google_callback_creates_user(db_session, client):
     ):
         response = client.get(f"/oauth/google/callback?code=fakecode&state={state}")
 
-    assert response.status_code == 200
-    data = response.json()
-    assert "access_token" in data
-    assert "user" in data
-    assert data["user"]["email"] == "oauth-user@example.com"
+    assert response.status_code == 303
+    assert response.headers["location"] == f"{get_config().FRONTEND_URL}/dashboard"
+    assert "access_token" in response.cookies
+    assert response.cookies["access_token"] is not None
+    assert response.cookies.get("oauth_state") is None or response.cookies.get("oauth_state") == ""

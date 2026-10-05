@@ -16,10 +16,11 @@ def test_create_user_duplicate_email(db_session):
         create_user(db_session, user_in)
 
 def test_create_user_duplicate_username(db_session):
-    user_in = UserCreate(email="dup@example.com", username="dupuser", password="password123")
-    create_user(db_session, user_in)
+    first_user = UserCreate(email="dup@example.com", username="dupuser", password="password123")
+    duplicate_username = UserCreate(email="another@example.com", username="dupuser", password="password123")
+    create_user(db_session, first_user)
     with pytest.raises(UserNameAlreadyExistsException):
-        create_user(db_session, user_in)
+        create_user(db_session, duplicate_username)
 
 def test_update_user_username(db_session):
     user_in = UserCreate(email="update@example.com", username="oldname", password="password123")

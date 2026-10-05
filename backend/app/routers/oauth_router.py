@@ -245,7 +245,7 @@ async def oauth_callback(
     jwt_token = create_access_token(subject=user.id)
 
     response = RedirectResponse(
-        url=f"{config.FRONTEND_URL.rstrip("/")}/dashboard",
+        url=f"{config.FRONTEND_URL}/dashboard",
         status_code=303,
     )
     response.set_cookie(
